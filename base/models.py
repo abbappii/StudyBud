@@ -21,6 +21,10 @@ class Rooms(models.Model):
     updated = models.DateField(auto_now=True)
     created = models.DateField(auto_now_add=True)
 
+    # metaclass use korar karon hosse last value add krar por oita upore show korano
+    class Meta:
+        ordering = ['-updated','-created']
+
     def __str__(self):
         return self.name
 
