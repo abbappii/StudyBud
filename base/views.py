@@ -1,7 +1,6 @@
-
-from multiprocessing import context
 from django.shortcuts import redirect, render
-from .models import Rooms
+from .models import Rooms, Topic
+from django.db.models import Q 
 from .forms import UserRoom
 # Create your views here.
 
@@ -16,8 +15,18 @@ from .forms import UserRoom
 
 
 def home(request):
-    rooms = Rooms.objects.all()
-    context = {'rooms': rooms}
+    q = request.GET.get('q') if request.GET.get('q') != None else '' 
+    # 'q' defer what we pass on url  
+    print(q)  
+    rooms = Rooms.objects.filter(Q(topic__name__icontains =q) |
+        Q(description__icontains=q) | 
+        Q(name__icontains=q)
+        )
+    
+    topics = Topic.objects.all()
+    room_count = rooms.count()
+
+    context = {'rooms': rooms,'topics':topics, 'room_count': room_count}
     return  render(request, 'base/home.html',context)
 
 def room(request,pk):

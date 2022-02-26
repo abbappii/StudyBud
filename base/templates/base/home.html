@@ -2,25 +2,53 @@
 
 {% block content%}
 
-    <div>
-        <h1>Home page</h1>
-    </div>
+    <style>
+        .home-container{
+            display: grid;
+            grid-template-columns: 1fr 4fr;
+        }
+    </style>
 
-    <div>
-
-        <a href="{% url 'create_room' %}">create_room</a>
-
+    <div class="home-container">
         <div>
-            {% for room in rooms %}
+            <div class="container">
+                <h1>Topics</h1>
+            <hr>
+            <div>
+                <a href="{% url 'home' %}"> All </a>
+
+            </div>
+            {% for topic in topics %}
                 <div>
-                    <a href="{% url 'update_room' room.id %}">Edit</a>
-                    <a href="{% url 'delete_room' room.id %}">delete</a>
-                    <span>@{{ room.host.username }}</span>
-                    <h5>{{ room.id}} -- <a href="{% url 'room' room.id %}"> {{ room.name }} </a> </h5>
-                    <span>{{ room.topic.name }}</span>
+                    <a href="{% url 'home' %}?q={{topic.name}}"> {{ topic.name  }} </a>
                 </div>
             {% endfor %}
+            <hr>
+
+            </div>
+            
+        </div>
+    
+        <div>
+            <h5>{{ room_count }} rooms are available</h5>
+            <a href="{% url 'create_room' %}">create_room</a>
+            <br><br>
+    
+            <div>
+                {% for room in rooms %}
+                    <div>
+                        <a href="{% url 'update_room' room.id %}">Edit</a>
+                        <a href="{% url 'delete_room' room.id %}">delete</a>
+                        <span>@{{ room.host.username }}</span><br><br>
+                        <h5>{{ room.id}} -- <a href="{% url 'room' room.id %}"> {{ room.name }} </a> </h5>
+                        <span>{{ room.topic.name }}</span>
+                        <hr>
+                        
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
+    
 
 {% endblock %}
