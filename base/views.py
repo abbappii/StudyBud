@@ -3,6 +3,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import UserCreationForm
 
 from django.contrib import messages
 from .models import Rooms, Topic
@@ -20,9 +21,10 @@ from .forms import UserRoom
 # ]
 
 def loginPage(request):
+    page = 'login'
     if request.method == 'POST':
         # get username and password form user input 
-        username = request.POST.get('username')
+        username = request.POST.get('username').lower()
         password = request.POST.get('password')
 
         # check this user exit or not 
@@ -41,12 +43,29 @@ def loginPage(request):
         else:
             messages.error(request, 'Username or Password does not exit')
       
-    context = {}
+    context = {'page': page}
     return render(request, 'base/login_register.html', context)
 
 def logoutPage(request):
     logout(request)
     return redirect('home')
+
+
+def registerPage(request):
+    form = UserCreationForm()
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.username = user.username.lower()
+            user.save()
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'An error occured during registrations')
+
+    context = {'form':form}
+    return render(request, 'base/login_register.html',context)
 
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') != None else '' 
@@ -90,7 +109,7 @@ def update_room(request,pk):
         return HttpResponse('You are no allowed here.')
 
     if request.method == 'POST':
-        form = UserRoom(request.POST)
+        form = UserRoom(request.POST, instance=room)
         if form.is_valid():
             form.save()
             return redirect('home')
