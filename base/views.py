@@ -1,4 +1,10 @@
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+
+from django.contrib import messages
 from .models import Rooms, Topic
 from django.db.models import Q 
 from .forms import UserRoom
@@ -13,6 +19,34 @@ from .forms import UserRoom
 #     {'id': 4, 'name': 'Fun with code'},
 # ]
 
+def loginPage(request):
+    if request.method == 'POST':
+        # get username and password form user input 
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        # check this user exit or not 
+        try:
+            user = User.objects.get(username=username)
+        except:
+            messages.error(request, 'User does not exit')
+
+        # if user exit make sure the credential is correct or not 
+        user = authenticate(request,username=username, password=password)
+        
+        # login user and create the session on db browser and redirect home page 
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'Username or Password does not exit')
+      
+    context = {}
+    return render(request, 'base/login_register.html', context)
+
+def logoutPage(request):
+    logout(request)
+    return redirect('home')
 
 def home(request):
     q = request.GET.get('q') if request.GET.get('q') != None else '' 
@@ -34,6 +68,7 @@ def room(request,pk):
     context = { 'room': room}
     return render(request, 'base/room.html',context)
 
+@login_required(login_url='login')
 def create_room(request):
     form = UserRoom() #form
     if request.method == 'POST': #post data
@@ -46,9 +81,14 @@ def create_room(request):
     context = {'form': form,}  #form ke context hisebe html e file e pathano
     return render(request, 'base/room_form.html', context)  # render kora html form e jekhane value niye kaj kora jabe
 
+@login_required(login_url='login')
 def update_room(request,pk):
     room = Rooms.objects.get(id=pk)
     form = UserRoom(instance=room)
+
+    if request.user != room.host:
+        return HttpResponse('You are no allowed here.')
+
     if request.method == 'POST':
         form = UserRoom(request.POST)
         if form.is_valid():
@@ -57,9 +97,13 @@ def update_room(request,pk):
     context = {'form':form}
     return render(request, 'base/room_form.html', context)
 
-
+@login_required(login_url='login')
 def delete_room(request,pk):
     room = Rooms.objects.get(id=pk)
+
+    if request.user != room.host:
+        return HttpResponse('You are no allowed here.')
+
     if request.method == 'POST':
         room.delete()
         return redirect('home')
