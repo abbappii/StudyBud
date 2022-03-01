@@ -5,5 +5,4 @@ from .models import Rooms
 class UserRoom(ModelForm):
     class Meta:
         model = Rooms
-        # fields = '__all__'
-        exclude = ['host',]
+        fields = '__all__'
