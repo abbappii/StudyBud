@@ -1,3 +1,4 @@
+from multiprocessing import context
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
@@ -82,6 +83,15 @@ def home(request):
 
     context = {'rooms': rooms,'topics':topics, 'room_count': room_count, 'room_messages':room_messages}
     return  render(request, 'base/home.html',context)
+
+def userProfile(request,pk):
+    user = User.objects.get(id=pk)
+    rooms = user.rooms_set.all()
+    room_messages = user.message_set.all()
+    topics = Topic.objects.all()
+    
+    context = {'user':user, 'rooms':rooms, 'room_messages':room_messages, 'topics': topics}
+    return render(request, 'base/profile.html',context)
 
 def room(request,pk):
     room = Rooms.objects.get(id=pk)
