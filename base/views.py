@@ -121,7 +121,9 @@ def create_room(request):
         # jonno UserForm e request.POST pathai deoya 
         form = UserRoom(request.POST) #form e post data pathai deoya
         if form.is_valid(): #value valid kina 
-            form.save() #valid hoile save kora
+            room = form.save(commit=False) #valid hoile save kora
+            room.host = request.user
+            room.save()
             return redirect('home')  #save hoile home page e niye jaoya
     context = {'form': form,}  #form ke context hisebe html e file e pathano
     return render(request, 'base/room_form.html', context)  # render kora html form e jekhane value niye kaj kora jabe
