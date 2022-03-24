@@ -9,7 +9,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .models import Rooms, Topic, Message
 from django.db.models import Q 
-from .forms import UserRoom
+from .forms import UserForm, UserRoom
 # Create your views here.
 
 
@@ -82,7 +82,7 @@ def home(request):
     room_messages = Message.objects.filter(Q(room__topic__name__icontains=q))
 
     context = {'rooms': rooms,'topics':topics, 'room_count': room_count, 'room_messages':room_messages}
-    return  render(request, 'base/home.html',context)
+    return render(request, 'base/home.html',context)
 
 def userProfile(request,pk):
     user = User.objects.get(id=pk)
@@ -116,32 +116,52 @@ def room(request,pk):
 @login_required(login_url='login')
 def create_room(request):
     form = UserRoom() #form
+    topics = Topic.objects.all()
     if request.method == 'POST': #post data
+        topic_name = request.POST.get('topic')
+        topic, create = Topic.objects.get_or_create(name=topic_name)
+
+        Rooms.objects.create(
+            host = request.user,
+            topic = topic,
+            name = request.POST.get('name'),
+            description = request.POST.get('description'),
+        )
         # user data add korlei form e vlaue pathai deoyar 
         # jonno UserForm e request.POST pathai deoya 
-        form = UserRoom(request.POST) #form e post data pathai deoya
-        if form.is_valid(): #value valid kina 
-            room = form.save(commit=False) #valid hoile save kora
-            room.host = request.user
-            room.save()
-            return redirect('home')  #save hoile home page e niye jaoya
-    context = {'form': form,}  #form ke context hisebe html e file e pathano
+        # form = UserRoom(request.POST) #form e post data pathai deoya
+        # if form.is_valid(): #value valid kina 
+        #     room = form.save(commit=False) #valid hoile save kora
+        #     room.host = request.user
+        #     room.save()
+        return redirect('home')  #save hoile home page e niye jaoya
+    context = {'form': form,'topics':topics}  #form ke context hisebe html e file e pathano
     return render(request, 'base/room_form.html', context)  # render kora html form e jekhane value niye kaj kora jabe
 
 @login_required(login_url='login')
 def update_room(request,pk):
     room = Rooms.objects.get(id=pk)
     form = UserRoom(instance=room)
+    topics = Topic.objects.all()
 
-    if request.user != room.host:
+
+    if request.user != room.host:       
         return HttpResponse('You are no allowed here.')
 
     if request.method == 'POST':
-        form = UserRoom(request.POST, instance=room)
-        if form.is_valid():
-            form.save()
-            return redirect('home')
-    context = {'form':form}
+        topic_name = request.POST.get('topic')
+        topic, create = Topic.objects.get_or_create(name=topic_name)
+
+        room.name = request.POST.get('name')
+        room.topic = topic
+        room.description = request.POST.get('description')
+        room.save()
+
+        # form = UserRoom(request.POST, instance=room)
+        # if form.is_valid():
+        #     form.save()
+        return redirect('home')
+    context = {'form':form, 'topics':topics,'room':room}
     return render(request, 'base/room_form.html', context)
 
 @login_required(login_url='login')
@@ -171,3 +191,17 @@ def delete_message(request,pk):
         return redirect('home')
     context = {'obj':message}
     return render(request, 'base/delete.html', context)
+
+@login_required(login_url='login')
+def updateUser(request):
+    user = request.user
+    form = UserForm(instance=user)
+
+    if request.method == 'POST':
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user_profile', pk=user.id)
+
+    context = {'form':form}
+    return render(request, 'base/update_user.html',context)
