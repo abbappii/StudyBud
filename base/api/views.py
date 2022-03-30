@@ -1,4 +1,3 @@
-import imp
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -17,5 +16,5 @@ def getRooms(request):
 def getRoom(request,pk):
 
     room = Rooms.objects.get(id=pk)
-    serializer = RoomSerializers(room)
+    serializer = RoomSerializers(room, many=False)
     return Response(serializer.data)

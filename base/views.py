@@ -2,13 +2,14 @@ from multiprocessing import context
 from unicodedata import name
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.contrib.auth.models import User
+
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 
 from django.contrib import messages
-from .models import Rooms, Topic, Message
+from .models import Rooms, Topic, Message,User
+
 from django.db.models import Q 
 from .forms import UserForm, UserRoom
 # Create your views here.
