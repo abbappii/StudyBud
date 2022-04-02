@@ -5,13 +5,12 @@ from django.shortcuts import redirect, render
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import UserCreationForm
 
 from django.contrib import messages
 from .models import Rooms, Topic, Message,User
 
 from django.db.models import Q 
-from .forms import UserForm, UserRoom
+from .forms import UserForm, UserRoom, MyUserCreationForm
 # Create your views here.
 
 
@@ -27,17 +26,17 @@ def loginPage(request):
     page = 'login'
     if request.method == 'POST':
         # get username and password form user input 
-        username = request.POST.get('username').lower()
+        email = request.POST.get('email').lower()
         password = request.POST.get('password')
 
         # check this user exit or not 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(email=email)
         except:
             messages.error(request, 'User does not exit')
 
         # if user exit make sure the credential is correct or not 
-        user = authenticate(request,username=username, password=password)
+        user = authenticate(request,email=email, password=password)
         
         # login user and create the session on db browser and redirect home page 
         if user is not None:
@@ -55,9 +54,9 @@ def logoutPage(request):
 
 
 def registerPage(request):
-    form = UserCreationForm()
+    form = MyUserCreationForm()
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = MyUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.username.lower()
@@ -200,7 +199,7 @@ def updateUser(request):
     form = UserForm(instance=user)
 
     if request.method == 'POST':
-        form = UserForm(request.POST, instance=user)
+        form = UserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             return redirect('user_profile', pk=user.id)
